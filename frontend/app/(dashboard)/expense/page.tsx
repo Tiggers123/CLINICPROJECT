@@ -3,18 +3,28 @@ import { useState, useEffect } from "react";
 
 const Page = () => {
   // State สำหรับ input กับผลการคำนวณ
-  const [quantity, setQuantity] = useState(0);
-  const [unitPrice, setUnitPrice] = useState(0);
+  const [quantity, setQuantity] = useState("");
+  const [unitPrice, setUnitPrice] = useState("");
   const [totalPrice, setTotalPrice] = useState(0);
-  const [discount, setDiscount] = useState(0);
+  const [discount, setDiscount] = useState("");
   const [finalValue, setFinalValue] = useState(0);
 
   // Auto Calculate
   useEffect(() => {
-    const calculatedTotal = quantity * unitPrice;
+    const calculatedTotal =
+      (parseFloat(quantity) || 0) * (parseFloat(unitPrice) || 0);
     setTotalPrice(calculatedTotal);
-    setFinalValue(calculatedTotal - discount);
+    setFinalValue(calculatedTotal - (parseFloat(discount) || 0));
   }, [quantity, unitPrice, discount]);
+
+  // จัดการค่าหลังพิมพ์ ลบ 0 ที่ขึ้นต้น
+  const handleInputChange = (
+    value: string,
+    setter: (value: string) => void
+  ) => {
+    const sanitizedValue = value.replace(/^0+(?!$)/, ""); // ลบ 0 ขึ้นต้น แต่ไม่ลบถ้าเป็น "0"
+    setter(sanitizedValue);
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -72,21 +82,21 @@ const Page = () => {
             className="border p-2 rounded-lg"
           />
           <input
-            type="number"
+            type="text"
             value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value))}
+            onChange={(e) => handleInputChange(e.target.value, setQuantity)}
             placeholder="จำนวน"
             className="border p-2 rounded-lg"
           />
           <input
-            type="number"
+            type="text"
             value={unitPrice}
-            onChange={(e) => setUnitPrice(Number(e.target.value))}
+            onChange={(e) => handleInputChange(e.target.value, setUnitPrice)}
             placeholder="ราคา"
             className="border p-2 rounded-lg"
           />
           <input
-            type="number"
+            type="text"
             value={totalPrice}
             readOnly
             placeholder="ราคารวม"
@@ -110,9 +120,9 @@ const Page = () => {
             <div className="flex justify-between items-center mb-4">
               <span>ส่วนลดรวม</span>
               <input
-                type="number"
+                type="text"
                 value={discount}
-                onChange={(e) => setDiscount(Number(e.target.value))}
+                onChange={(e) => handleInputChange(e.target.value, setDiscount)}
                 placeholder="บาท"
                 className="border p-2 rounded-lg w-24"
               />
@@ -120,7 +130,7 @@ const Page = () => {
             <div className="flex justify-between items-center mb-6">
               <span>มูลค่าหลังส่วนลด</span>
               <input
-                type="number"
+                type="text"
                 value={finalValue}
                 readOnly
                 placeholder="บาท"
