@@ -2,14 +2,14 @@
 import { useState, useEffect } from "react";
 
 const Page = () => {
-  // State for inputs and calculation results
+  // State สำหรับ input กับผลการคำนวณ
   const [quantity, setQuantity] = useState(0);
   const [unitPrice, setUnitPrice] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [finalValue, setFinalValue] = useState(0);
 
-  // Automatically recalculate whenever quantity, unitPrice, or discount changes
+  // Auto Calculate
   useEffect(() => {
     const calculatedTotal = quantity * unitPrice;
     setTotalPrice(calculatedTotal);
