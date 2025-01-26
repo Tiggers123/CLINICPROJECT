@@ -2,28 +2,61 @@
 import { useState, useEffect } from "react";
 
 const Page = () => {
-  // State สำหรับ input กับผลการคำนวณ
-  const [quantity, setQuantity] = useState("");
-  const [unitPrice, setUnitPrice] = useState("");
-  const [totalPrice, setTotalPrice] = useState(0);
+  // State สำหรับแถว
+  const [rows, setRows] = useState([
+    {
+      id: 1,
+      item: "",
+      accountCode: "",
+      quantity: "",
+      unitPrice: "",
+      totalPrice: 0,
+    },
+  ]);
   const [discount, setDiscount] = useState("");
   const [finalValue, setFinalValue] = useState(0);
 
-  // Auto Calculate
+  // คำนวณผลรวมทั้งหมด
   useEffect(() => {
-    const calculatedTotal =
-      (parseFloat(quantity) || 0) * (parseFloat(unitPrice) || 0);
-    setTotalPrice(calculatedTotal);
-    setFinalValue(calculatedTotal - (parseFloat(discount) || 0));
-  }, [quantity, unitPrice, discount]);
+    const total = rows.reduce((sum, row) => sum + row.totalPrice, 0);
+    setFinalValue(total - (parseFloat(discount) || 0));
+  }, [rows, discount]);
 
-  // จัดการค่าหลังพิมพ์ ลบ 0 ที่ขึ้นต้น
-  const handleInputChange = (
-    value: string,
-    setter: (value: string) => void
-  ) => {
-    const sanitizedValue = value.replace(/^0+(?!$)/, ""); // ลบ 0 ขึ้นต้น แต่ไม่ลบถ้าเป็น "0"
-    setter(sanitizedValue);
+  // อัปเดตค่าของแถว
+  const updateRow = (id: number, field: string, value: string) => {
+    setRows((prevRows) =>
+      prevRows.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              [field]: value,
+              totalPrice:
+                field === "quantity" || field === "unitPrice"
+                  ? (parseFloat(field === "quantity" ? value : row.quantity) ||
+                      0) *
+                    (parseFloat(
+                      field === "unitPrice" ? value : row.unitPrice
+                    ) || 0)
+                  : row.totalPrice,
+            }
+          : row
+      )
+    );
+  };
+
+  // เพิ่มแถว
+  const addRow = () => {
+    setRows((prevRows) => [
+      ...prevRows,
+      {
+        id: prevRows.length + 1,
+        item: "",
+        accountCode: "",
+        quantity: "",
+        unitPrice: "",
+        totalPrice: 0,
+      },
+    ]);
   };
 
   return (
@@ -68,61 +101,70 @@ const Page = () => {
           <span>ราคารวม</span>
         </div>
 
-        {/* Row */}
-        <div className="grid grid-cols-6 gap-6 items-center mb-6">
-          <span className="text-center">1</span>
-          <input
-            type="text"
-            placeholder="รายการ"
-            className="border p-2 rounded-lg"
-          />
-          <input
-            type="text"
-            placeholder="รหัสบัญชี"
-            className="border p-2 rounded-lg"
-          />
-          <input
-            type="text"
-            value={quantity}
-            onChange={(e) => handleInputChange(e.target.value, setQuantity)}
-            placeholder="จำนวน"
-            className="border p-2 rounded-lg"
-          />
-          <input
-            type="text"
-            value={unitPrice}
-            onChange={(e) => handleInputChange(e.target.value, setUnitPrice)}
-            placeholder="ราคา"
-            className="border p-2 rounded-lg"
-          />
-          <input
-            type="text"
-            value={totalPrice}
-            readOnly
-            placeholder="ราคารวม"
-            className="border p-2 rounded-lg"
-          />
+        {/* Rows */}
+        {rows.map((row) => (
+          <div
+            className="grid grid-cols-6 gap-6 items-center mb-4"
+            key={row.id}
+          >
+            <span className="text-center">{row.id}</span>
+            <input
+              type="text"
+              value={row.item}
+              onChange={(e) => updateRow(row.id, "item", e.target.value)}
+              placeholder="รายการ"
+              className="border p-2 rounded-lg"
+            />
+            <input
+              type="text"
+              value={row.accountCode}
+              onChange={(e) => updateRow(row.id, "accountCode", e.target.value)}
+              placeholder="รหัสบัญชี"
+              className="border p-2 rounded-lg"
+            />
+            <input
+              type="text"
+              value={row.quantity}
+              onChange={(e) => updateRow(row.id, "quantity", e.target.value)}
+              placeholder="จำนวน"
+              className="border p-2 rounded-lg"
+            />
+            <input
+              type="text"
+              value={row.unitPrice}
+              onChange={(e) => updateRow(row.id, "unitPrice", e.target.value)}
+              placeholder="ราคา/หน่วย"
+              className="border p-2 rounded-lg"
+            />
+            <input
+              type="text"
+              value={row.totalPrice.toFixed(2)}
+              readOnly
+              placeholder="ราคารวม"
+              className="border p-2 rounded-lg"
+            />
+          </div>
+        ))}
+
+        {/* Add Button */}
+        <div className="mb-6">
+          <button
+            onClick={addRow}
+            className="bg-[#FB6F92] text-white px-4 py-2 rounded-lg shadow hover:bg-pink-500"
+          >
+            เพิ่มรายการ +
+          </button>
         </div>
 
-        {/* Footer */}
+        {/* Summary */}
         <div className="grid grid-cols-3 gap-6 mt-6">
-          {/* หมายเหตุ */}
-          <div className="col-span-2">
-            <label className="block font-semibold mb-2">หมายเหตุ</label>
-            <textarea
-              className="w-full border p-2 rounded-lg"
-              placeholder="กรอกหมายเหตุ"
-            ></textarea>
-          </div>
-
-          {/* Summary */}
           <div>
             <div className="flex justify-between items-center mb-4">
               <span>ส่วนลดรวม</span>
               <input
                 type="text"
                 value={discount}
-                onChange={(e) => handleInputChange(e.target.value, setDiscount)}
+                onChange={(e) => setDiscount(e.target.value)}
                 placeholder="บาท"
                 className="border p-2 rounded-lg w-24"
               />
@@ -131,7 +173,7 @@ const Page = () => {
               <span>มูลค่าหลังส่วนลด</span>
               <input
                 type="text"
-                value={finalValue}
+                value={finalValue.toFixed(2)}
                 readOnly
                 placeholder="บาท"
                 className="border p-2 rounded-lg w-24"
