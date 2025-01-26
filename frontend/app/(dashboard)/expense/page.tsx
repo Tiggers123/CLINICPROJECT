@@ -28,17 +28,17 @@ const Page = () => {
       prevRows.map((row) =>
         row.id === id
           ? {
-              ...row,
-              [field]: value,
-              totalPrice:
-                field === "quantity" || field === "unitPrice"
-                  ? (parseFloat(field === "quantity" ? value : row.quantity) ||
-                      0) *
-                    (parseFloat(
-                      field === "unitPrice" ? value : row.unitPrice
-                    ) || 0)
-                  : row.totalPrice,
-            }
+            ...row,
+            [field]: value,
+            totalPrice:
+              field === "quantity" || field === "unitPrice"
+                ? (parseFloat(field === "quantity" ? value : row.quantity) ||
+                  0) *
+                (parseFloat(
+                  field === "unitPrice" ? value : row.unitPrice
+                ) || 0)
+                : row.totalPrice,
+          }
           : row
       )
     );
@@ -59,10 +59,65 @@ const Page = () => {
     ]);
   };
 
+  // ฟังก์ชันสำหรับพิมพ์ใบเสร็จ
+  const printReceipt = () => {
+    const receiptHTML = `
+      <html>
+        <head>
+          <title>ใบเสร็จ</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            table, th, td { border: 1px solid #ddd; }
+            th, td { padding: 8px; text-align: left; }
+            .text-right { text-align: right; }
+          </style>
+        </head>
+        <body>
+          <h1>ใบเสร็จรับเงิน</h1>
+          <p>เลขที่เอกสาร: EXP-9999999</p>
+          <p>วันที่สร้าง: 11-11/2024</p>
+          <table>
+            <thead>
+              <tr>
+                <th>ลำดับ</th>
+                <th>รายการ</th>
+                <th>จำนวน</th>
+                <th>ราคา/หน่วย</th>
+                <th>ราคารวม</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows
+        .map(
+          (row) => `
+                  <tr>
+                    <td>${row.id}</td>
+                    <td>${row.item || "-"}</td>
+                    <td class="text-right">${row.quantity || "0"}</td>
+                    <td class="text-right">${row.unitPrice || "0.00"}</td>
+                    <td class="text-right">${row.totalPrice.toFixed(2)}</td>
+                  </tr>
+                `
+        )
+        .join("")}
+            </tbody>
+          </table>
+          <p class="text-right">ส่วนลด: ${discount || "0.00"} บาท</p>
+          <h2 class="text-right">ยอดสุทธิ: ${finalValue.toFixed(2)} บาท</h2>
+        </body>
+      </html>
+    `;
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    printWindow?.document.write(receiptHTML);
+    printWindow?.document.close();
+    printWindow?.print();
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">บันทึกค่าใช้จ่าย</h1>
-
       <div className="bg-[#FFC9D6]  p-6 rounded-lg flex flex-col md:flex-row items-center gap-6 mb-8">
         <div className="flex flex-col">
           <p className="font-semibold">เลขที่เอกสาร : EXP-9999999</p>
@@ -88,6 +143,7 @@ const Page = () => {
             </button>
           </div>
         </div>
+
       </div>
 
       <div className="bg-[#FFC9D6] p-6 rounded-lg shadow-lg max-w-5xl mx-auto">
@@ -179,9 +235,17 @@ const Page = () => {
                 className="border p-2 rounded-lg w-24"
               />
             </div>
-            <button className="bg-[#FB6F92] text-white px-6 py-2 rounded-lg w-full">
-              มูลค่ารวม {finalValue.toFixed(2)} บาท
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={printReceipt}
+                className="bg-[#FB6F92] text-white px-6 py-2 rounded-lg"
+              >
+                พิมพ์ใบเสร็จ
+              </button>
+              <button className="bg-[#FB6F92] text-white px-6 py-2 rounded-lg">
+                มูลค่ารวม {finalValue.toFixed(2)} บาท
+              </button>
+            </div>
           </div>
         </div>
       </div>
